@@ -1,0 +1,19 @@
+<?xml version="1.0" encoding="utf-8"?>
+<menu xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <item
+        android:id="@+id/reportFragment"
+        android:title="기록"
+        android:icon="@drawable/navi_report"/>
+
+    <item
+        android:id="@+id/homeFragment"
+        android:title="홈"
+        android:icon="@drawable/navi_home"/>
+
+    <item
+        android:id="@+id/graphFragment"
+        android:title="그래프"
+        android:icon="@drawable/navi_graph"/>
+
+</menu>
