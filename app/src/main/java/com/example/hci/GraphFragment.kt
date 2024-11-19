@@ -1,19 +1,18 @@
 package com.example.hci
 
 import android.graphics.Color
+import androidx.fragment.app.Fragment
 import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.fragment.app.Fragment
-import com.github.mikephil.charting.charts.LineChart
-import com.github.mikephil.charting.components.LimitLine
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
 import com.github.mikephil.charting.data.LineDataSet
-import com.github.mikephil.charting.formatter.IndexAxisValueFormatter
-import java.math.BigDecimal
+import com.github.mikephil.charting.charts.LineChart
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 class GraphFragment : Fragment() {
 
@@ -27,70 +26,58 @@ class GraphFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // 임의의 데이터 엔트리 생성
-        val entries = listOf(
-            Entry(1f, 5f),
-            Entry(2f, 8f),
-            Entry(3f, 12f),
-            Entry(4f, 5f),
-            Entry(5f, 10f),
-            Entry(6f, 12f)
-        )
-
-        // 목표 몸무게 설정 (임의의 값)
-        val targetWeight = BigDecimal(10)
-
-        // LineChart 업데이트
-        updateLineChartWithWeight(entries, targetWeight)
+        // assets 폴더에서 CSV 파일 읽어와 그래프 표시
+        loadCSVFromAssets()
     }
 
-    // 그래프 업데이트 함수
-    private fun updateLineChartWithWeight(entries: List<Entry>, targetWeight: BigDecimal?) {
-        val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
+    private fun loadCSVFromAssets() {
+        val entries = mutableListOf<Entry>()
 
-        // entries가 비어있으면 기본값으로 처리
-        val mutableEntries = if (entries.isEmpty()) mutableListOf(Entry(0f, 0f)) else entries.toMutableList()
+        try {
+            // assets 폴더에서 파일 읽기
+            val inputStream = requireContext().assets.open("eeg_graph_data_stable.csv")
+            val reader = BufferedReader(InputStreamReader(inputStream))
 
-        val dataSet = LineDataSet(mutableEntries, "뇌파").apply {
-            color = Color.parseColor("#FFBF00")
-            setCircleColor(Color.parseColor("#FFBF00"))
-            circleRadius = 5f
-            lineWidth = 3f
-            mode = LineDataSet.Mode.LINEAR
-        }
-
-        // x축 설정
-        lineChart.xAxis.apply {
-            axisMinimum = 0f
-            axisMaximum = 6f
-            position = XAxis.XAxisPosition.BOTTOM
-            granularity = 1f
-            setLabelCount(7, true)
-            valueFormatter = IndexAxisValueFormatter(arrayOf("1", "2", "3", "4", "5", "6", "7"))
-        }
-
-        // y축 설정 및 목표 몸무게 라인 추가
-        lineChart.axisLeft.apply {
-            axisMinimum = 0f
-            axisMaximum = 15f
-            removeAllLimitLines()
-
-            targetWeight?.let { weight ->
-                val limitLine = LimitLine(weight.toFloat(), "기준 뇌파").apply {
-                    lineColor = Color.parseColor("#B40404")
-                    lineWidth = 2f
+            var isFirstRow = true
+            reader.forEachLine { line ->
+                if (isFirstRow) {
+                    isFirstRow = false // 첫 번째 행은 헤더
+                    return@forEachLine
                 }
-                addLimitLine(limitLine)
+                val columns = line.split(",") // CSV의 각 열 분리
+                val frequency = columns[0].toFloat() // 첫 번째 열: Frequency
+                val magnitude = columns[1].toFloat() // 두 번째 열: Magnitude
+                entries.add(Entry(frequency, magnitude))
             }
+            reader.close()
+
+            // LineChart 데이터 설정
+            val dataSet = LineDataSet(entries, "EEG Data").apply {
+                color = Color.BLUE
+                valueTextColor = Color.BLACK
+                lineWidth = 2f
+                setCircleColor(Color.RED)
+                circleRadius = 4f
+            }
+
+            val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
+            lineChart.data = LineData(dataSet)
+
+            // LineChart 스타일 설정
+            lineChart.xAxis.apply {
+                position = XAxis.XAxisPosition.BOTTOM
+                granularity = 1f
+                setDrawGridLines(false)
+            }
+            lineChart.axisLeft.apply {
+                setDrawGridLines(false)
+            }
+            lineChart.axisRight.isEnabled = false
+            lineChart.description.isEnabled = false
+            lineChart.invalidate() // 그래프 새로고침
+
+        } catch (e: Exception) {
+            e.printStackTrace()
         }
-
-        // 오른쪽 y축 숨기기
-        lineChart.axisRight.isEnabled = false
-
-        // LineData 설정
-        lineChart.data = LineData(dataSet)
-
-        // 그래프 업데이트
-        lineChart.invalidate()
     }
 }
