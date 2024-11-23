@@ -21,23 +21,7 @@
         app:layout_constraintVertical_bias="0.1" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button2"
-        android:layout_width="300dp"
-        android:layout_height="50dp"
-        android:background="@drawable/button1"
-        android:gravity="center"
-        android:text="광장공포증"
-        android:textColor="#ffffff"
-        android:textSize="20dp"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.495"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.499" />
-
-    <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button1"
+        android:id="@+id/acrophobiaBtn"
         android:layout_width="300dp"
         android:layout_height="50dp"
         android:background="@drawable/button1"
@@ -53,7 +37,23 @@
         app:layout_constraintVertical_bias="0.348" />
 
     <androidx.appcompat.widget.AppCompatButton
-        android:id="@+id/button3"
+        android:id="@+id/agoraphobiaBtn"
+        android:layout_width="300dp"
+        android:layout_height="50dp"
+        android:background="@drawable/button1"
+        android:gravity="center"
+        android:text="광장공포증"
+        android:textColor="#ffffff"
+        android:textSize="20dp"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.495"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.499" />
+
+    <androidx.appcompat.widget.AppCompatButton
+        android:id="@+id/claustrophobiaBtn"
         android:layout_width="300dp"
         android:layout_height="50dp"
         android:background="@drawable/button1"
@@ -67,5 +67,20 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintVertical_bias="0.649" />
+
+    <TextView
+        android:id="@+id/programGuide"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:gravity="center_horizontal"
+        android:text=""
+        android:textColor="@color/gray"
+        android:textSize="22sp"
+        android:textStyle="bold"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent"
+        app:layout_constraintVertical_bias="0.839" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
