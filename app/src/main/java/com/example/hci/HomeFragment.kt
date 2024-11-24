@@ -43,7 +43,7 @@ class HomeFragment : Fragment() {
 
     private fun sendPostRequest() {
         Log.d("sss", "sss")
-        val url = "http://172.20.19.128:5000/run-muse"
+        val url = "http://192.168.1.102:5000/run-muse"
         val client = OkHttpClient()
 
         val request = Request.Builder()
