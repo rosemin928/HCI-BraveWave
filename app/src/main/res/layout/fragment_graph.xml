@@ -20,11 +20,12 @@
     </LinearLayout>
 
     <TextView
+        android:id="@+id/title"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
         android:layout_marginTop="550dp"
         android:layout_marginStart="25dp"
-        android:text="총 훈련 시간: 15분 36초"
+        android:text=""
         android:textColor="@color/black"
         android:textSize="16sp"
         android:textStyle="bold" />

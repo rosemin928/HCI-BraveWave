@@ -6,29 +6,34 @@ import android.view.ViewGroup
 import android.widget.ImageView
 import android.widget.TextView
 import androidx.recyclerview.widget.RecyclerView
+import com.bumptech.glide.Glide
 
-class TrainingReportAdapter(private val reports: List<TrainingReport>) :
-    RecyclerView.Adapter<TrainingReportAdapter.ViewHolder>() {
+class TrainingReportAdapter(private val reportList: List<TrainingReport>) :
+    RecyclerView.Adapter<TrainingReportAdapter.ReportViewHolder>() {
 
-    inner class ViewHolder(view: View) : RecyclerView.ViewHolder(view) {
-        val dateTextView: TextView = view.findViewById(R.id.tvTrainingDate)
-        val graphImageView: ImageView = view.findViewById(R.id.ivGraph)
-        val totalTimeTextView: TextView = view.findViewById(R.id.tvTrainingTime)
-        val performanceTextView: TextView = view.findViewById(R.id.tvTrainingPerformance)
+    class ReportViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
+        val dateTextView: TextView = itemView.findViewById(R.id.trainingDate)
+        val graphImageView: ImageView = itemView.findViewById(R.id.eegGraph)
+        val trainingTitleTextView: TextView = itemView.findViewById(R.id.trainingTitle)
+        val performanceTextView: TextView = itemView.findViewById(R.id.trainingPerformance)
     }
 
-    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
+    override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ReportViewHolder {
         val view = LayoutInflater.from(parent.context).inflate(R.layout.item_report, parent, false)
-        return ViewHolder(view)
+        return ReportViewHolder(view)
     }
 
-    override fun onBindViewHolder(holder: ViewHolder, position: Int) {
-        val report = reports[position]
+    override fun onBindViewHolder(holder: ReportViewHolder, position: Int) {
+        val report = reportList[position]
         holder.dateTextView.text = report.date
-        holder.graphImageView.setImageResource(report.graphImageResId)
-        holder.totalTimeTextView.text = "총 훈련 시간: ${report.totalTime}"
-        holder.performanceTextView.text = "훈련 성과: ${report.performance}"
+        holder.trainingTitleTextView.text = report.title
+        holder.performanceTextView.text = report.performance
+
+        // Firebase Storage 이미지 로드
+        Glide.with(holder.itemView.context)
+            .load(report.graphImageUrl)
+            .into(holder.graphImageView)
     }
 
-    override fun getItemCount() = reports.size
+    override fun getItemCount(): Int = reportList.size
 }

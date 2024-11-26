@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "103677950424",
+    "project_id": "hci-bravewave",
+    "storage_bucket": "hci-bravewave.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:103677950424:android:d09243556c9db2214e9aad",
+        "android_client_info": {
+          "package_name": "com.example.hci"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCfqQg0QgLD6Au5Itc5BxocKE9EznyH7WQ"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

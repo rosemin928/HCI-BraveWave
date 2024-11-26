@@ -9,7 +9,9 @@ import android.util.Log
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import android.view.ViewTreeObserver
 import android.widget.Toast
+import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -33,30 +35,53 @@ import java.io.InputStreamReader
 
 class GraphFragment : Fragment() {
 
-    override fun onCreateView(
-        inflater: LayoutInflater, container: ViewGroup?,
-        savedInstanceState: Bundle?
-    ): View? {
+    private lateinit var viewModel: SharedViewModel
+    private lateinit var lineChart: LineChart
+
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+        viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
         return inflater.inflate(R.layout.fragment_graph, container, false)
     }
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // assets 폴더에서 CSV 파일 읽어와 그래프 표시
-        //loadCSVFromAssets()
-        downloadCSV("http://192.168.1.102:5000/download-csv")
+        lineChart = view.findViewById(R.id.lineChart)
+
+        // ViewModel의 CSV 다운로드 요청 상태를 관찰
+        viewModel.downloadCSVRequest.observe(viewLifecycleOwner) { shouldDownload ->
+            if (shouldDownload) {
+                // CSV 다운로드 실행
+                downloadCSV("http://192.168.1.102:5000/download-csv")
+                viewModel.downloadCSVRequest.postValue(false) // 요청 초기화
+            }
+        }
+
+        // ViewTreeObserver를 사용하여 LineChart 초기화 후 Bitmap 생성
+        lineChart.viewTreeObserver.addOnGlobalLayoutListener(object : ViewTreeObserver.OnGlobalLayoutListener {
+            override fun onGlobalLayout() {
+                // LineChart가 초기화되었는지 확인
+                if (lineChart.width > 0 && lineChart.height > 0) {
+                    // LineChart의 Bitmap을 ViewModel에 저장
+                    viewModel.chartBitmap.postValue(lineChart.chartBitmap)
+
+                    // 리스너 제거
+                    lineChart.viewTreeObserver.removeOnGlobalLayoutListener(this)
+
+                    // 그래프 준비 완료 상태를 ViewModel에 알림
+                    viewModel.isGraphReady.postValue(true)
+                }
+            }
+        })
     }
+
 
     private fun loadCSVFromAssets() {
         val entries = mutableListOf<Entry>()
 
         try {
-            // assets 폴더에서 파일 읽기
             val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "real_eeg_data.csv")
             val reader = BufferedReader(FileReader(file))
-           // val inputStream = requireContext().assets.open("eeg_graph_data_stable.csv")
-           // val reader = BufferedReader(InputStreamReader(inputStream))
 
             var isFirstRow = true
             reader.forEachLine { line ->
@@ -64,9 +89,9 @@ class GraphFragment : Fragment() {
                     isFirstRow = false // 첫 번째 행은 헤더
                     return@forEachLine
                 }
-                val columns = line.split(",") // CSV의 각 열 분리
-                val frequency = columns[0].toFloat() // 첫 번째 열: Frequency
-                val magnitude = columns[1].toFloat() // 두 번째 열: Magnitude
+                val columns = line.split(",")
+                val frequency = columns[0].toFloat()
+                val magnitude = columns[1].toFloat()
                 entries.add(Entry(frequency, magnitude))
             }
             reader.close()
@@ -83,7 +108,6 @@ class GraphFragment : Fragment() {
             val lineChart = requireView().findViewById<LineChart>(R.id.lineChart)
             lineChart.data = LineData(dataSet)
 
-            // LineChart 스타일 설정
             lineChart.xAxis.apply {
                 position = XAxis.XAxisPosition.BOTTOM
                 granularity = 1f
@@ -94,7 +118,10 @@ class GraphFragment : Fragment() {
             }
             lineChart.axisRight.isEnabled = false
             lineChart.description.isEnabled = false
-            lineChart.invalidate() // 그래프 새로고침
+            lineChart.invalidate() // 새로고침
+
+            // 그래프 준비 상태 업데이트
+            viewModel.isGraphReady.postValue(true)
 
         } catch (e: Exception) {
             e.printStackTrace()
@@ -102,17 +129,13 @@ class GraphFragment : Fragment() {
     }
 
     private fun downloadCSV(url: String) {
-        // 코루틴을 사용하여 비동기 다운로드
         CoroutineScope(Dispatchers.IO).launch {
             try {
-                // OkHttp 클라이언트 생성
                 val client = OkHttpClient()
                 val request = Request.Builder().url(url).build()
-
                 val response: Response = client.newCall(request).execute()
 
                 if (response.isSuccessful) {
-                    // 파일을 /sdcard/Download/real_eeg_data.csv에 저장
                     saveFile(response.body?.byteStream())
                 } else {
                     Log.e("Download failed", "Download failed: ${response.message}")
@@ -126,7 +149,6 @@ class GraphFragment : Fragment() {
     private suspend fun saveFile(inputStream: InputStream?) {
         inputStream?.let {
             try {
-                // 다운로드 받은 파일을 저장할 경로
                 val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), "real_eeg_data.csv")
                 val outputStream = FileOutputStream(file)
 
@@ -140,15 +162,13 @@ class GraphFragment : Fragment() {
                 outputStream.close()
                 it.close()
 
-                // UI 업데이트: 파일 다운로드 성공
                 withContext(Dispatchers.Main) {
-                    Toast.makeText(context, "CSV 파일 다운로드 완료!", Toast.LENGTH_LONG).show()
+                    loadCSVFromAssets() // 그래프 초기화
                 }
-                loadCSVFromAssets()
-
             } catch (e: IOException) {
                 Log.e("Error", "Error saving file: ", e)
             }
         }
     }
+
 }

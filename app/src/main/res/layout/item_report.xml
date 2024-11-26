@@ -5,7 +5,7 @@
     android:padding="16dp">
 
     <TextView
-        android:id="@+id/tvTrainingDate"
+        android:id="@+id/trainingDate"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="훈련 날짜"
@@ -14,7 +14,7 @@
         android:textStyle="bold"/>
 
     <ImageView
-        android:id="@+id/ivGraph"
+        android:id="@+id/eegGraph"
         android:layout_width="180dp"
         android:layout_height="100dp"
         android:scaleType="centerCrop"
@@ -23,15 +23,15 @@
         android:layout_marginTop="5dp"/>
 
     <TextView
-        android:id="@+id/tvTrainingTime"
+        android:id="@+id/trainingTitle"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="총 훈련 시간: 30분"
+        android:text="고소공포증 1단계"
         android:textSize="14sp"
         android:textColor="@color/black" />
 
     <TextView
-        android:id="@+id/tvTrainingPerformance"
+        android:id="@+id/trainingPerformance"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="훈련 성과: 우수"

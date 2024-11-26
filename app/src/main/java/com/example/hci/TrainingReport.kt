@@ -1,8 +1,8 @@
 package com.example.hci
 
 data class TrainingReport(
-    val date: String,
-    val graphImageResId: Int,
-    val totalTime: String,
-    val performance: String
+    val date: String = "",
+    val graphImageUrl: String = "",
+    val title: String = "",
+    val performance: String = ""
 )
