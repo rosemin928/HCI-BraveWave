@@ -81,6 +81,9 @@ class HomeFragment : Fragment() {
         val isCompressed = graphBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
         if (!isCompressed) {
             Log.e("SaveTrainingReport", "Bitmap compression failed")
+            activity?.runOnUiThread {
+                binding.programGuide.text = "이미지 압축에 실패했습니다."
+            }
             return
         }
         val data = baos.toByteArray()
@@ -93,10 +96,28 @@ class HomeFragment : Fragment() {
                     title = programTitle,
                     performance = "우수"
                 )
-                database.push().setValue(trainingReport)
+                database.push().setValue(trainingReport).addOnSuccessListener {
+                    Log.d("SaveTrainingReport", "Training report saved successfully.")
+                    activity?.runOnUiThread {
+                        binding.programGuide.text = "훈련 보고서가 성공적으로 저장되었습니다."
+                    }
+                }.addOnFailureListener { e ->
+                    Log.e("SaveTrainingReport", "Failed to save report to database", e)
+                    activity?.runOnUiThread {
+                        binding.programGuide.text = "데이터베이스 저장에 실패했습니다."
+                    }
+                }
+            }.addOnFailureListener { e ->
+                Log.e("SaveTrainingReport", "Failed to get download URL", e)
+                activity?.runOnUiThread {
+                    binding.programGuide.text = "다운로드 URL 가져오기에 실패했습니다."
+                }
             }
-        }.addOnFailureListener {
-            Log.e("SaveTrainingReport", "Image upload failed", it)
+        }.addOnFailureListener { e ->
+            Log.e("SaveTrainingReport", "Failed to upload image", e)
+            activity?.runOnUiThread {
+                binding.programGuide.text = "이미지 업로드에 실패했습니다."
+            }
         }
     }
 
