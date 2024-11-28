@@ -107,6 +107,7 @@ class GraphFragment : Fragment() {
                 val canvas = Canvas(bitmap)
                 chart.draw(canvas)
                 viewModel.chartBitmap.postValue(bitmap)
+                Log.d("UpdateChartBitmap", "Chart bitmap successfully created and updated.")
             } else {
                 Log.e("UpdateChartBitmap", "Chart dimensions are invalid: width=${chart.width}, height=${chart.height}")
             }
@@ -165,7 +166,10 @@ class GraphFragment : Fragment() {
                 loadCSVToLineChart(fearFile, lineChartFear)
 
                 // BarChart 비트맵 업데이트
-                barChart.doOnLayout { updateChartBitmap(barChart) }
+                barChart.doOnLayout {
+                    updateChartBitmap(barChart)
+                    Log.d("GraphFragment", "ChartBitmap updated after layout.")
+                }
 
             } catch (e: Exception) {
                 Log.e("GraphFragment", "Error reading CSV files", e)

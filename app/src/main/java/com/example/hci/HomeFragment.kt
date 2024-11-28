@@ -138,9 +138,11 @@ class HomeFragment : Fragment() {
         // 그래프 준비 상태 관찰
         viewModel.isGraphReady.observe(viewLifecycleOwner) { isReady ->
             if (isReady) {
-                viewModel.chartBitmap.value?.let { bitmap ->
-                    saveTrainingReport(programText, bitmap)
-                } ?: Log.e("SaveTrainingReport", "chartBitmap is null")
+                Handler(Looper.getMainLooper()).postDelayed({
+                    viewModel.chartBitmap.value?.let { bitmap ->
+                        saveTrainingReport(programText, bitmap)
+                    } ?: Log.e("SaveTrainingReport", "chartBitmap is null")
+                }, 10000) // 10초 지연
             }
         }
     }
