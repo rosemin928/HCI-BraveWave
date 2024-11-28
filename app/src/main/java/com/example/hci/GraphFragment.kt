@@ -51,12 +51,12 @@ class GraphFragment : Fragment() {
     private lateinit var titleTextView: TextView
 
     // Retrofit API Service 정의
-    val retrofit = Retrofit.Builder()
+    private val retrofit = Retrofit.Builder()
         .baseUrl("http://192.168.1.102:5000/") // Flask 서버의 기본 URL
         .addConverterFactory(GsonConverterFactory.create())
         .build()
 
-    val apiService = retrofit.create(ApiService::class.java)
+    private val apiService = retrofit.create(ApiService::class.java)
 
     override fun onCreateView(
         inflater: LayoutInflater,
@@ -91,13 +91,7 @@ class GraphFragment : Fragment() {
         // 그래프 준비 완료 시 그래프 업데이트
         viewModel.isGraphReady.observe(viewLifecycleOwner) { isReady ->
             if (isReady) {
-                val stableData = CSVUtils.readCSV(requireContext(), "eeg_graph_data_stable.csv")
-                val fearData = CSVUtils.readCSV(requireContext(), "eeg_graph_data_fear.csv")
-
-                val stableMeans = calculateBandMeans(stableData)
-                val fearMeans = calculateBandMeans(fearData)
-
-                setupBarChart(barChart, stableMeans, fearMeans)
+                loadAndDisplayGraphs()
             }
         }
     }
@@ -124,6 +118,33 @@ class GraphFragment : Fragment() {
                 titleTextView.text = "Failed to fetch p-value: ${t.message}"
             }
         })
+    }
+
+    private fun loadAndDisplayGraphs() {
+        val stableFile = "eeg_graph_data_stable.csv"
+        val fearFile = "eeg_graph_data_fear.csv"
+
+        if (isFileExists(stableFile) && isFileExists(fearFile)) {
+            try {
+                val stableData = CSVUtils.readCSV(requireContext(), stableFile)
+                val fearData = CSVUtils.readCSV(requireContext(), fearFile)
+
+                val stableMeans = calculateBandMeans(stableData)
+                val fearMeans = calculateBandMeans(fearData)
+
+                setupBarChart(barChart, stableMeans, fearMeans)
+            } catch (e: Exception) {
+                Log.e("GraphFragment", "Error reading CSV files", e)
+                titleTextView.text = "CSV 파일을 읽는 중 문제가 발생했습니다."
+            }
+        } else {
+            titleTextView.text = "CSV 파일이 존재하지 않습니다. 데이터를 먼저 다운로드하세요."
+        }
+    }
+
+    private fun isFileExists(filename: String): Boolean {
+        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename)
+        return file.exists()
     }
 
     private fun downloadCSV(url: String, name: String) {
