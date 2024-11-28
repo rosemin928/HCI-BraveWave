@@ -104,12 +104,17 @@ class HomeFragment : Fragment() {
         speakText(speechText)
         startProgram(programText, color)
 
+        // 서버에 훈련 시작 요청
+        sendPostRequest()
+
+        // 훈련 종료 상태 관찰
         viewModel.isTrainingFinished.observe(viewLifecycleOwner) { isFinished ->
             if (isFinished) {
                 viewModel.downloadCSVRequest.postValue(true) // CSV 다운로드 요청
             }
         }
 
+        // 그래프 준비 상태 관찰
         viewModel.isGraphReady.observe(viewLifecycleOwner) { isReady ->
             if (isReady) {
                 viewModel.chartBitmap.value?.let { bitmap ->
@@ -171,12 +176,12 @@ class HomeFragment : Fragment() {
                         "$programText ${String.format("%02d:%02d", minutes, seconds)}"
 
                     // 2분 경과 알림
-                    if (elapsedTime == 120) {
+                    if (elapsedTime == 60) {
                         speakText("2분이 경과했습니다. 기기를 착용해주세요.")
                     }
 
                     // 4분 후 종료
-                    if (elapsedTime == 240) {
+                    if (elapsedTime == 120) {
                         isRunning = false
                         binding.programGuide.text = "프로그램 종료: 훈련이 완료되었습니다."
                         binding.programGuide.setTextColor(requireContext().getColor(R.color.red))
