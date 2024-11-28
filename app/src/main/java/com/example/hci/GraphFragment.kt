@@ -1,5 +1,7 @@
 package com.example.hci
 
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.graphics.Color
 import android.nfc.Tag
 import androidx.fragment.app.Fragment
@@ -14,6 +16,7 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.charts.Chart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.Entry
 import com.github.mikephil.charting.data.LineData
@@ -96,6 +99,14 @@ class GraphFragment : Fragment() {
         }
     }
 
+    private fun updateChartBitmap(chart: Chart<*>) {
+        val bitmap = Bitmap.createBitmap(chart.width, chart.height, Bitmap.Config.ARGB_8888)
+        val canvas = Canvas(bitmap)
+        chart.draw(canvas)
+        viewModel.chartBitmap.postValue(bitmap)
+    }
+
+
     private fun fetchPValue() {
         apiService.getPValue().enqueue(object : retrofit2.Callback<PValueResponse> {
             override fun onResponse(
@@ -104,11 +115,19 @@ class GraphFragment : Fragment() {
             ) {
                 if (response.isSuccessful) {
                     val pValueResponse = response.body()
-                    val pValue = pValueResponse?.p_value ?: "N/A"
+                    val pValue = pValueResponse?.p_value ?: -1.0 // p-value가 null인 경우 -1로 설정
                     val tStat = pValueResponse?.t_stat ?: "N/A"
 
-                    // TextView에 결과 표시
-                    titleTextView.text = "T-Statistic: $tStat\nP-Value: $pValue"
+                    if (pValue >= 0.05) {
+                        // p-value가 0.05 이상인 경우
+                        titleTextView.text = "훈련 성과: 우수 (p-value: $pValue)"
+                    } else if (pValue != -1.0) {
+                        // p-value가 0.05 미만인 경우
+                        titleTextView.text = "훈련 성과: 미흡 (p-value: $pValue)"
+                    } else {
+                        // p-value를 가져오지 못한 경우
+                        titleTextView.text = "p-value를 가져오는 데 실패했습니다."
+                    }
                 } else {
                     titleTextView.text = "Error fetching p-value: ${response.message()}"
                 }
@@ -138,6 +157,10 @@ class GraphFragment : Fragment() {
                 setupBarChart(barChart, stableMeans, fearMeans)
                 loadCSVToLineChart(stableFile, lineChartStable)
                 loadCSVToLineChart(fearFile, lineChartFear)
+
+                // BarChart를 비트맵으로 변환하여 저장
+                updateChartBitmap(barChart)
+
             } catch (e: Exception) {
                 Log.e("GraphFragment", "Error reading CSV files", e)
                 titleTextView.text = "CSV 파일을 읽는 중 문제가 발생했습니다."
