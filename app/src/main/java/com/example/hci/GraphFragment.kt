@@ -147,12 +147,6 @@ class GraphFragment : Fragment() {
         }
     }
 
-
-    private fun isFileExists(filename: String): Boolean {
-        val file = File(Environment.getExternalStoragePublicDirectory(Environment.DIRECTORY_DOWNLOADS), filename)
-        return file.exists()
-    }
-
     private fun downloadCSV(url: String, name: String) {
         CoroutineScope(Dispatchers.IO).launch {
             try {

@@ -1,9 +1,6 @@
 package com.example.hci
 
 import android.graphics.Bitmap
-import android.graphics.Canvas
-import android.graphics.Color
-import android.graphics.Paint
 import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
@@ -39,11 +36,7 @@ class HomeFragment : Fragment() {
     private lateinit var handler: Handler
     private lateinit var viewModel: SharedViewModel
 
-    override fun onCreate(savedInstanceState: Bundle?) {
-        super.onCreate(savedInstanceState)
-    }
-
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View {
         binding = FragmentHomeBinding.inflate(inflater, container, false)
         viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
 
@@ -63,15 +56,15 @@ class HomeFragment : Fragment() {
 
         // 버튼 리스너 설정
         binding.acrophobiaBtn.setOnClickListener {
-            handleButtonClick("고소공포증 훈련 진행중", "고소공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
+            handleButtonClick("고소공포증 훈련 진행", "고소공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
         }
 
         binding.agoraphobiaBtn.setOnClickListener {
-            handleButtonClick("광장공포증 훈련 진행중", "광장공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
+            handleButtonClick("광장공포증 훈련 진행", "광장공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
         }
 
         binding.claustrophobiaBtn.setOnClickListener {
-            handleButtonClick("폐소공포증 훈련 진행중", "폐소공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
+            handleButtonClick("폐소공포증 훈련 진행", "폐소공포증 대응 훈련을 시작합니다.", requireContext().getColor(R.color.green))
         }
 
         return binding.root
@@ -85,7 +78,11 @@ class HomeFragment : Fragment() {
         val graphRef = storage.child("$date-${programTitle}.png")
 
         val baos = ByteArrayOutputStream()
-        graphBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        val isCompressed = graphBitmap.compress(Bitmap.CompressFormat.PNG, 100, baos)
+        if (!isCompressed) {
+            Log.e("SaveTrainingReport", "Bitmap compression failed")
+            return
+        }
         val data = baos.toByteArray()
 
         graphRef.putBytes(data).addOnSuccessListener {
