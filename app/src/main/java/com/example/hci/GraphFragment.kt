@@ -14,6 +14,7 @@ import android.view.ViewGroup
 import android.view.ViewTreeObserver
 import android.widget.TextView
 import android.widget.Toast
+import androidx.core.view.doOnLayout
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.charts.Chart
@@ -100,12 +101,17 @@ class GraphFragment : Fragment() {
     }
 
     private fun updateChartBitmap(chart: Chart<*>) {
-        val bitmap = Bitmap.createBitmap(chart.width, chart.height, Bitmap.Config.ARGB_8888)
-        val canvas = Canvas(bitmap)
-        chart.draw(canvas)
-        viewModel.chartBitmap.postValue(bitmap)
+        chart.doOnLayout {
+            if (chart.width > 0 && chart.height > 0) {
+                val bitmap = Bitmap.createBitmap(chart.width, chart.height, Bitmap.Config.ARGB_8888)
+                val canvas = Canvas(bitmap)
+                chart.draw(canvas)
+                viewModel.chartBitmap.postValue(bitmap)
+            } else {
+                Log.e("UpdateChartBitmap", "Chart dimensions are invalid: width=${chart.width}, height=${chart.height}")
+            }
+        }
     }
-
 
     private fun fetchPValue() {
         apiService.getPValue().enqueue(object : retrofit2.Callback<PValueResponse> {
@@ -158,8 +164,8 @@ class GraphFragment : Fragment() {
                 loadCSVToLineChart(stableFile, lineChartStable)
                 loadCSVToLineChart(fearFile, lineChartFear)
 
-                // BarChart를 비트맵으로 변환하여 저장
-                updateChartBitmap(barChart)
+                // BarChart 비트맵 업데이트
+                barChart.doOnLayout { updateChartBitmap(barChart) }
 
             } catch (e: Exception) {
                 Log.e("GraphFragment", "Error reading CSV files", e)
