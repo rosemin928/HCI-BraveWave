@@ -10,6 +10,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.view.ViewTreeObserver
+import android.widget.TextView
 import android.widget.Toast
 import androidx.lifecycle.ViewModelProvider
 import com.github.mikephil.charting.charts.BarChart
@@ -27,6 +28,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
 import okhttp3.Call
+import okhttp3.Callback
 import okhttp3.OkHttpClient
 import okhttp3.Request
 import okhttp3.Response
@@ -37,6 +39,8 @@ import java.io.FileReader
 import java.io.IOException
 import java.io.InputStream
 import java.io.InputStreamReader
+import retrofit2.*
+import retrofit2.converter.gson.GsonConverterFactory
 
 class GraphFragment : Fragment() {
 
@@ -44,8 +48,21 @@ class GraphFragment : Fragment() {
     private lateinit var lineChartStable: LineChart
     private lateinit var lineChartFear: LineChart
     private lateinit var barChart: BarChart
+    private lateinit var titleTextView: TextView
 
-    override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
+    // Retrofit API Service 정의
+    val retrofit = Retrofit.Builder()
+        .baseUrl("http://192.168.1.102:5000/") // Flask 서버의 기본 URL
+        .addConverterFactory(GsonConverterFactory.create())
+        .build()
+
+    val apiService = retrofit.create(ApiService::class.java)
+
+    override fun onCreateView(
+        inflater: LayoutInflater,
+        container: ViewGroup?,
+        savedInstanceState: Bundle?
+    ): View? {
         viewModel = ViewModelProvider(requireActivity())[SharedViewModel::class.java]
         return inflater.inflate(R.layout.fragment_graph, container, false)
     }
@@ -53,12 +70,16 @@ class GraphFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        // LineChart 및 BarChart 초기화
+        // Chart 및 TextView 초기화
         lineChartStable = view.findViewById(R.id.lineChart1)
         lineChartFear = view.findViewById(R.id.lineChart2)
         barChart = view.findViewById(R.id.barChart)
+        titleTextView = view.findViewById(R.id.title)
 
-        // CSV 다운로드 요청 관찰
+        // Flask 서버에서 p-value 가져오기
+        fetchPValue()
+
+        // CSV 다운로드 요청 감지 및 처리
         viewModel.downloadCSVRequest.observe(viewLifecycleOwner) { shouldDownload ->
             if (shouldDownload) {
                 downloadCSV("http://192.168.1.102:5000/download-csv1", "eeg_graph_data_stable.csv")
@@ -67,7 +88,7 @@ class GraphFragment : Fragment() {
             }
         }
 
-        // CSV 다운로드 및 그래프 준비 완료
+        // 그래프 준비 완료 시 그래프 업데이트
         viewModel.isGraphReady.observe(viewLifecycleOwner) { isReady ->
             if (isReady) {
                 val stableData = CSVUtils.readCSV(requireContext(), "eeg_graph_data_stable.csv")
@@ -79,6 +100,30 @@ class GraphFragment : Fragment() {
                 setupBarChart(barChart, stableMeans, fearMeans)
             }
         }
+    }
+
+    private fun fetchPValue() {
+        apiService.getPValue().enqueue(object : retrofit2.Callback<PValueResponse> {
+            override fun onResponse(
+                call: retrofit2.Call<PValueResponse>,
+                response: retrofit2.Response<PValueResponse>
+            ) {
+                if (response.isSuccessful) {
+                    val pValueResponse = response.body()
+                    val pValue = pValueResponse?.p_value ?: "N/A"
+                    val tStat = pValueResponse?.t_stat ?: "N/A"
+
+                    // TextView에 결과 표시
+                    titleTextView.text = "T-Statistic: $tStat\nP-Value: $pValue"
+                } else {
+                    titleTextView.text = "Error fetching p-value: ${response.message()}"
+                }
+            }
+
+            override fun onFailure(call: retrofit2.Call<PValueResponse>, t: Throwable) {
+                titleTextView.text = "Failed to fetch p-value: ${t.message}"
+            }
+        })
     }
 
     private fun downloadCSV(url: String, name: String) {
