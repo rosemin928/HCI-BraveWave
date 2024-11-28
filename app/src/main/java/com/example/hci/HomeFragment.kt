@@ -140,7 +140,7 @@ class HomeFragment : Fragment() {
             if (isReady) {
                 viewModel.chartBitmap.value?.let { bitmap ->
                     saveTrainingReport(programText, bitmap)
-                }
+                } ?: Log.e("SaveTrainingReport", "chartBitmap is null")
             }
         }
     }
