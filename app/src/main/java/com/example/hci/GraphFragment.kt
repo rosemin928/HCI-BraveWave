@@ -165,10 +165,9 @@ class GraphFragment : Fragment() {
                 loadCSVToLineChart(stableFile, lineChartStable)
                 loadCSVToLineChart(fearFile, lineChartFear)
 
-                // BarChart 비트맵 업데이트
                 barChart.doOnLayout {
                     updateChartBitmap(barChart)
-                    Log.d("GraphFragment", "ChartBitmap updated after layout.")
+                    Log.d("GraphFragment", "chartBitmap updated successfully after layout.")
                 }
 
             } catch (e: Exception) {

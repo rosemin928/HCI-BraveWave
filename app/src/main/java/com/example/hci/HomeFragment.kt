@@ -139,9 +139,13 @@ class HomeFragment : Fragment() {
         viewModel.isGraphReady.observe(viewLifecycleOwner) { isReady ->
             if (isReady) {
                 Handler(Looper.getMainLooper()).postDelayed({
-                    viewModel.chartBitmap.value?.let { bitmap ->
+                    val bitmap = viewModel.chartBitmap.value
+                    if (bitmap != null) {
                         saveTrainingReport(programText, bitmap)
-                    } ?: Log.e("SaveTrainingReport", "chartBitmap is null")
+                    } else {
+                        Log.e("SaveTrainingReport", "chartBitmap is null even after delay.")
+                        binding.programGuide.text = "차트 준비가 완료되지 않았습니다."
+                    }
                 }, 10000) // 10초 지연
             }
         }
@@ -149,23 +153,35 @@ class HomeFragment : Fragment() {
 
     private fun sendPostRequest() {
         val url = "http://192.168.1.102:5000/run-muse"
-        val client = OkHttpClient()
+        val client = OkHttpClient.Builder()
+            .connectTimeout(30, TimeUnit.SECONDS) // 연결 타임아웃 설정
+            .readTimeout(30, TimeUnit.SECONDS) // 읽기 타임아웃 설정
+            .writeTimeout(30, TimeUnit.SECONDS) // 쓰기 타임아웃 설정
+            .build()
 
         val request = Request.Builder()
             .url(url)
-            .post(RequestBody.create(null, ""))
+            .post(RequestBody.create(null, "")) // 빈 POST 요청
             .build()
 
         client.newCall(request).enqueue(object : Callback {
             override fun onFailure(call: Call, e: IOException) {
                 e.printStackTrace()
                 activity?.runOnUiThread {
-                    binding.programGuide.text = "프로그램 시작 실패: 네트워크 오류"
+                    binding.programGuide.text = "프로그램 시작 실패: 네트워크 오류 (${e.message})"
                 }
             }
 
             override fun onResponse(call: Call, response: Response) {
-                println("Response: ${response.body?.string()}")
+                if (response.isSuccessful) {
+                    activity?.runOnUiThread {
+                        binding.programGuide.text = "훈련 시작 요청이 성공적으로 처리되었습니다."
+                    }
+                } else {
+                    activity?.runOnUiThread {
+                        binding.programGuide.text = "서버에서 오류가 발생했습니다: ${response.code}"
+                    }
+                }
             }
         })
     }
