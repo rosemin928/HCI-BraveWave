@@ -102,14 +102,23 @@ class GraphFragment : Fragment() {
 
     private fun updateChartBitmap(chart: Chart<*>) {
         chart.doOnLayout {
+            Log.d("UpdateChartBitmap", "Chart dimensions - width: ${chart.width}, height: ${chart.height}")
             if (chart.width > 0 && chart.height > 0) {
-                val bitmap = Bitmap.createBitmap(chart.width, chart.height, Bitmap.Config.ARGB_8888)
-                val canvas = Canvas(bitmap)
-                chart.draw(canvas)
-                viewModel.chartBitmap.postValue(bitmap)
-                Log.d("UpdateChartBitmap", "Chart bitmap successfully created and updated.")
+                try {
+                    val bitmap = Bitmap.createBitmap(chart.width, chart.height, Bitmap.Config.ARGB_8888)
+                    val canvas = Canvas(bitmap)
+                    chart.draw(canvas)
+                    viewModel.chartBitmap.postValue(bitmap)
+
+                    // 추가 디버깅 로그
+                    Log.d("UpdateChartBitmap", "chartBitmap updated successfully: $bitmap")
+                } catch (e: Exception) {
+                    Log.e("UpdateChartBitmap", "Failed to create chart bitmap: ${e.message}")
+                    viewModel.chartBitmap.postValue(null)
+                }
             } else {
                 Log.e("UpdateChartBitmap", "Chart dimensions are invalid: width=${chart.width}, height=${chart.height}")
+                viewModel.chartBitmap.postValue(null)
             }
         }
     }
